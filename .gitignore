@@ -1,0 +1,21 @@
+# --- Python & Environnement ---
+.venv/
+__pycache__/
+*.py[cod]
+.uv_cache/
+
+# --- Variables d'environnement (Sécurité) ---
+.env
+
+# --- Données (On ne versionne pas les index ni les PDF) ---
+# Ces dossiers seront remplis lors de l'exécution
+data/bm25_index/
+data/chroma_db/
+data/raw/*
+# Sauf le fichier .gitkeep si vous voulez garder le dossier vide sur Git
+!data/raw/.gitkeep
+
+# --- Tests & Qualité ---
+.pytest_cache/
+.coverage
+htmlcov/

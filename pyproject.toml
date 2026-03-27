@@ -1,0 +1,67 @@
+[project]
+name = "rag_book"
+version = "0.1.0"
+description = "Système RAG avec recherche hybride sur documents locaux."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    # Core
+    "python-dotenv>=1.0.0,<2.0.0",
+    # API
+    "fastapi>=0.110.0,<1.0.0",
+    "uvicorn[standard]>=0.28.0,<1.0.0",
+    # LLM & RAG
+    "langchain>=1.0.0,<2.0.0",
+    "langchain-ollama>=1.0.0,<2.0.0",
+    "langgraph>=1.0.0,<2.0.0",
+    # Retrieval
+    "chromadb>=0.4.24,<1.0.0",
+    "rank-bm25>=0.2.2,<1.0.0",
+    # Document parsing
+    "pymupdf>=1.24.0,<2.0.0",
+    "langchain-text-splitters>=1.1.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=9.0.0,<10.0.0",
+    "pytest-cov>=7.0.0,<8.0.0",
+    "pytest-asyncio>=0.23.0,<1.0.0",
+]
+
+# P2 - à activer plus tard
+# pipeline = ["prefect>=2.16.0", "sqlmodel>=0.0.37"]
+# observability = ["langfuse>=2.20.0"]
+
+[dependency-groups]
+dev = [
+    "bandit>=1.9.0,<2.0.0",
+    "black>=24.0.0,<27.0.0",
+    "ruff>=0.3.0,<1.0.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+# --- Tools ---
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+addopts = "--cov=src --cov-report=term-missing"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["tests/*"]
+
+[tool.black]
+line-length = 100
+target-version = ['py311']
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
