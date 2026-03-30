@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch
 
 from langchain_core.documents import Document
 
-from src.ingestion.parser import parse_pdf
+from src.ingestion.parser import parse_pdf, _extract_structure
 from src.ingestion.chunker import chunk_documents
 from src.ingestion.indexer import index_documents, _generate_chunk_id, BM25_INDEX_FILE
 from src.ingestion.run_ingestion import run
@@ -34,6 +34,9 @@ class TestParsePDF:
             assert "filename" in doc.metadata
             assert "page" in doc.metadata
             assert "total_pages" in doc.metadata
+            assert "title" in doc.metadata
+            assert "chapter_count" in doc.metadata
+            assert "chapters" in doc.metadata
 
     def test_page_numbers_are_one_indexed(self, tmp_pdf):
         docs = parse_pdf(tmp_pdf)
@@ -49,15 +52,83 @@ class TestParsePDF:
         assert len(docs) >= 1
 
     def test_empty_pdf_raises_value_error(self, tmp_path):
+        """A PDF with pages but no extractable text raises ValueError."""
         import fitz
         pdf_path = tmp_path / "empty.pdf"
         doc = fitz.open()
-        doc.new_page()  # page with no text
+        doc.new_page()  # page exists but has no text
         doc.save(str(pdf_path))
         doc.close()
-        # No text → no documents returned (not a ValueError here)
+
+        with pytest.raises(ValueError, match="No extractable text found in"):
+            parse_pdf(pdf_path)
+
+    def test_all_docs_share_same_structure_metadata(self, tmp_pdf):
+        """All pages from the same PDF share title/chapters metadata."""
+        import fitz
+        pdf_path = tmp_pdf.parent / "multi.pdf"
+        doc = fitz.open()
+        for text in ["First page content", "Second page content"]:
+            page = doc.new_page()
+            page.insert_text((50, 100), text)
+        doc.save(str(pdf_path))
+        doc.close()
+
         docs = parse_pdf(pdf_path)
-        assert docs == []
+        assert len(docs) == 2
+        titles = {d.metadata["title"] for d in docs}
+        assert len(titles) == 1  # same title across all pages
+
+
+class TestExtractStructure:
+    def _make_pdf(self, tmp_path, pages: list[str]) -> "fitz.Document":
+        import fitz
+        pdf_path = tmp_path / "struct.pdf"
+        doc = fitz.open()
+        for text in pages:
+            page = doc.new_page()
+            if text:
+                page.insert_text((50, 100), text)
+        doc.save(str(pdf_path))
+        doc.close()
+        # Re-open to simulate production usage
+        return fitz.open(str(pdf_path))
+
+    def test_title_from_first_line(self, tmp_path):
+        import fitz
+        pdf = self._make_pdf(tmp_path, ["My Book Title\nSome body text"])
+        structure = _extract_structure(pdf, filename="fallback.pdf")
+        pdf.close()
+        assert structure["title"] == "My Book Title"
+
+    def test_title_fallback_to_filename(self, tmp_path):
+        import fitz
+        pdf = self._make_pdf(tmp_path, [""])  # blank page
+        structure = _extract_structure(pdf, filename="fallback.pdf")
+        pdf.close()
+        assert structure["title"] == "fallback.pdf"
+
+    def test_no_toc_gives_zero_chapters(self, tmp_path):
+        import fitz
+        pdf = self._make_pdf(tmp_path, ["Content without TOC"])
+        structure = _extract_structure(pdf, filename="book.pdf")
+        pdf.close()
+        assert structure["chapter_count"] == 0
+        assert structure["chapters"] == ""
+
+    def test_chapters_is_string(self, tmp_path):
+        import fitz
+        pdf = self._make_pdf(tmp_path, ["Content"])
+        structure = _extract_structure(pdf, filename="book.pdf")
+        pdf.close()
+        assert isinstance(structure["chapters"], str)
+
+    def test_structure_keys_present(self, tmp_path):
+        import fitz
+        pdf = self._make_pdf(tmp_path, ["Content"])
+        structure = _extract_structure(pdf, filename="book.pdf")
+        pdf.close()
+        assert {"title", "chapter_count", "chapters"} == set(structure.keys())
 
 
 # ---------------------------------------------------------------------------
