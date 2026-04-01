@@ -8,7 +8,7 @@ from langchain_core.documents import Document
 
 from src.rag.llm import get_llm
 from src.rag.retriever import retrieve
-from src.rag.prompts import RAG_PROMPT
+from src.rag.prompts import RAG_PROMPT, SYSTEM_CONTEXT
 
 
 class RAGState(TypedDict):
@@ -27,9 +27,12 @@ def retrieve_node(state: RAGState) -> dict:
 def generate_node(state: RAGState) -> dict:
     """Generate answer from retrieved context."""
     llm = get_llm()
-
     context = "\n\n---\n\n".join(doc.page_content for doc in state["documents"])
-    prompt = RAG_PROMPT.format(context=context, query=state["query"])
+    prompt = RAG_PROMPT.format(
+        system_context=SYSTEM_CONTEXT,
+        context=context,
+        query=state["query"],
+    )
     response = llm.invoke(prompt)
 
     sources = [

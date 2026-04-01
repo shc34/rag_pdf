@@ -26,5 +26,5 @@ def run(pdf_path: Path) -> None:
 
 
 if __name__ == "__main__":
-    pdf_path = RAW_DIR / "kalman_filter.pdf"
-    run(pdf_path)
+    for pdf_path in sorted(RAW_DIR.glob("*.pdf")):
+            run(pdf_path)

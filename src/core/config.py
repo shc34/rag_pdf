@@ -61,8 +61,8 @@ class EmbeddingConfig:
 class ChunkConfig:
     """Text chunking parameters."""
 
-    chunk_size: int = int(os.getenv("CHUNK_SIZE", "500"))
-    chunk_overlap: int = int(os.getenv("CHUNK_OVERLAP", "100"))
+    chunk_size: int = int(os.getenv("CHUNK_SIZE", "1250"))
+    chunk_overlap: int = int(os.getenv("CHUNK_OVERLAP", "200"))
 
 
 @dataclass(frozen=True)
