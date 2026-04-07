@@ -8,11 +8,12 @@ from langchain_core.documents import Document
 
 from src.rag.llm import get_llm
 from src.rag.retriever import retrieve
-from src.rag.prompts import RAG_PROMPT, SYSTEM_CONTEXT
+from src.rag.prompts import RAG_PROMPT, SYSTEM_CONTEXTS
 
 
 class RAGState(TypedDict):
     query: str
+    corpus: str  # ← nouveau
     documents: list[Document]
     answer: str
     sources: list[dict]
@@ -20,16 +21,18 @@ class RAGState(TypedDict):
 
 def retrieve_node(state: RAGState) -> dict:
     """Retrieve relevant documents."""
-    docs = retrieve(state["query"])
+    docs = retrieve(state["query"], corpus=state.get("corpus"))
     return {"documents": docs}
 
 
 def generate_node(state: RAGState) -> dict:
     """Generate answer from retrieved context."""
+    from src.rag.prompts import RAG_PROMPT, get_system_context
+
     llm = get_llm()
     context = "\n\n---\n\n".join(doc.page_content for doc in state["documents"])
     prompt = RAG_PROMPT.format(
-        system_context=SYSTEM_CONTEXT,
+        system_context=get_system_context(state["corpus"]),
         context=context,
         query=state["query"],
     )

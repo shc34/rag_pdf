@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # src/main.py
 """Interactive CLI entrypoint for the RAG chatbot."""
 
@@ -5,6 +6,25 @@ from src.core.logger import get_logger
 from src.rag.graph import build_rag_graph
 
 logger = get_logger(__name__)
+
+CORPUS_OPTIONS = {
+    "1": ("zola", "Émile Zola"),
+    "2": ("balzac", "Honoré de Balzac"),
+}
+
+
+def _select_corpus() -> str:
+    """Prompt user to select a corpus."""
+    print("Choisissez un auteur :")
+    for key, (_, label) in CORPUS_OPTIONS.items():
+        print(f"  {key}. {label}")
+    while True:
+        choice = input("Votre choix : ").strip()
+        if choice in CORPUS_OPTIONS:
+            corpus, label = CORPUS_OPTIONS[choice]
+            print(f"\n✅ Corpus sélectionné : {label}\n")
+            return corpus
+        print("Choix invalide, réessayez.")
 
 
 def _format_sources(sources: list[dict]) -> str:
@@ -28,6 +48,7 @@ def run_chat() -> None:
     print("\n📚 RAG Livre — Assistant interactif")
     print("Tapez 'exit' ou 'quit' pour quitter.\n")
 
+    corpus = _select_corpus()
     graph = build_rag_graph()
 
     while True:
@@ -45,7 +66,7 @@ def run_chat() -> None:
             break
 
         try:
-            result = graph.invoke({"query": question})
+            result = graph.invoke({"query": question, "corpus": corpus})
 
             answer = result.get("answer", "Aucune réponse générée.")
             sources = result.get("sources", [])
