@@ -1,83 +1,71 @@
-# 📰 Project News — AI News Intelligence System
+# 📚 RAG Littérature — Zola & Balzac
 
-An end-to-end AI-powered system that ingests daily news articles, processes them through an NLP pipeline, and exposes insights via a RAG-based API.
+Système de Question-Answering basé sur le RAG (Retrieval-Augmented Generation) permettant d'interroger les œuvres complètes d'Émile Zola et d'Honoré de Balzac.
 
-## 🎯 Overview
+## 🎯 Objectif
 
-This system automatically:
-- Fetches and processes news articles daily
-- Generates embeddings and extracts keywords
-- Provides a conversational Q&A interface with source citations
-- Exposes topic trends and article search via API
+Poser des questions en langage naturel sur les œuvres de Zola ou Balzac et obtenir des réponses sourcées, générées par un LLM à partir des textes originaux.
 
 ## 🏗️ Architecture
 
-News APIs → Batch Pipeline (Prefect) → PostgreSQL + ChromaDB
-                                              ↓
-                                    FastAPI ← LangGraph RAG
+Textes (Gutenberg) → Découpage en chunks → Embeddings → ChromaDB
+                                                            ↓
+                                              LangGraph RAG → Réponse + Sources
 
-
-### Components
-
-| Component | Tech | Role |
-|-----------|------|------|
-| **Pipeline** | Prefect | Daily ingestion, cleaning, embedding, keyword extraction |
-| **Storage** | PostgreSQL + ChromaDB | Structured data + vector search |
-| **API** | FastAPI | REST endpoints for chat, topics, articles |
-| **RAG** | LangGraph | Query understanding, retrieval, answer generation |
-| **Observability** | LangSmith / Langfuse | Tracing and evaluation |
 
 ## 🚀 Quickstart
 
-### Prerequisites
+### Prérequis
 - Python 3.12+
-- PostgreSQL
 - [uv](https://docs.astral.sh/uv/)
+- Clé API OpenAI (ou autre LLM)
 
 ### Installation
 
 ```bash
-git clone git@github.com:YOUR-USERNAME/project_news.git
-cd project_news
-uv sync --extra dev
+git clone git@github.com:YOUR-USERNAME/projet_rag_livre.git
+cd projet_rag_livre
+uv sync
 
 Configuration
 
 cp .env.example .env
-# Edit .env with your API keys and database credentials
+# Ajouter votre clé API : OPENAI_API_KEY=sk-...
 
-Run
+Utilisation
 
-# Start the API
-uv run uvicorn src.api.main:app --reload
+# Ingestion des textes de Zola
+uv run python -m src.ingestion --author zola
 
-# Run the pipeline
-uv run prefect deployment run ...
+# Ingestion des textes de Balzac
+uv run python -m src.ingestion --author balzac
 
-📁 Project Structure
+# Lancer le RAG
+uv run python -m src.main
 
-project_news/
+📁 Structure
+
+projet_rag_livre/
 ├── src/
-│   ├── pipeline/       # Prefect flows: ingestion, embeddings, keywords
-│   ├── api/            # FastAPI endpoints
-│   ├── rag/            # LangGraph orchestration
-│   ├── db/             # PostgreSQL & ChromaDB clients
-│   └── config/         # Settings, env loading
+│   ├── ingestion/      # Chargement et découpage des textes
+│   ├── rag/            # Graph LangGraph, LLM, retriever
+│   ├── config/         # Settings
+│   └── main.py         # Point d'entrée
+├── data/               # Textes sources
 ├── tests/
 ├── pyproject.toml
 └── README.md
 
-📡 API Endpoints
-Method 	Endpoint 	Description
-POST 	/chat 	RAG-based Q&A with sources
-GET 	/topics 	Keyword/topic aggregation
-GET 	/articles 	Filter articles by date/topic
+🔑 Fonctionnalités
+
+    Multi-auteurs : collections séparées par auteur (Zola, Balzac)
+    RAG avec sources : chaque réponse cite les passages utilisés
+    Vectorisation : ChromaDB avec embeddings OpenAI
+    Orchestration : LangGraph pour le flux de raisonnement
+
 🛠️ Tech Stack
 
-Python · FastAPI · PostgreSQL · ChromaDB · LangGraph · LangChain · Prefect · TF-IDF
+Python · LangGraph · LangChain · ChromaDB · OpenAI
 📄 License
 
 MIT
-
-
-Remplace `YOUR-USERNAME` par ton pseudo GitHub. C'est concis, informatif, et facile à mettre à jour au fil du projet.
