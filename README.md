@@ -16,16 +16,16 @@ Textes (Gutenberg) → Découpage en chunks → Embeddings → ChromaDB
 ## 🚀 Quickstart
 
 ### Prérequis
-- Python 3.12+
+- check le pyproject.toml
 - [uv](https://docs.astral.sh/uv/)
 - Clé API OpenAI (ou autre LLM)
 
 ### Installation
 
 ```bash
-git clone git@github.com:YOUR-USERNAME/projet_rag_livre.git
-cd projet_rag_livre
-uv sync
+git clone git@github.com:shc34/rag_livres.git
+cd rag_livre
+uv sync --extra dev --group dev
 
 Configuration
 
@@ -42,6 +42,26 @@ uv run python -m src.ingestion --author balzac
 
 # Lancer le RAG
 uv run python -m src.main
+
+# Lancer l'api sur le port 8001
+uvicorn src.api.endpoints:app --reload --port 8001
+
+Entrée — POST /api/rag/chat
+{
+  "message": "Quel est le thème principal du livre ?",
+  "corpus": "nom_du_corpus"
+}
+Sortie
+{
+  "answer": "Le thème principal est ...",
+  "sources": [
+    {
+      "filename": "chapitre1.pdf",
+      "page": "12",
+      "score": 0.87
+    }
+  ]
+}
 
 📁 Structure
 
@@ -66,6 +86,9 @@ projet_rag_livre/
 🛠️ Tech Stack
 
 Python · LangGraph · LangChain · ChromaDB · OpenAI
+
+Amélioration: ragas, langfuse (overkill?)
+
 📄 License
 
 MIT
